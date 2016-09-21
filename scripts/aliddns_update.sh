@@ -6,10 +6,14 @@ if [ "$aliddns_enable" != "1" ]; then
     exit
 fi
 
+now=`date`
+
 ip=`curl http://whatismyip.akamai.com/ 2>/dev/null`
 if [ "$ip" = "$aliddns_saved_ip" ]
 then
     echo "skipping"
+    dbus set aliddns_last_time=$now
+    dbus set aliddns_last_act=skipped
     exit 0
 fi
 
@@ -67,11 +71,16 @@ then
         update_record $aliddns_record_id
     fi
 fi
+
 # save to file
 if [ "$aliddns_record_id" = "" ]; then
     # failed
     dbus ram aliddns_saved_ip=""
+    dbus set aliddns_last_act=failed
 else
     dbus ram aliddns_record_id=$aliddns_record_id
+    dbus set aliddns_last_act="success: $ip"
     dbus ram aliddns_saved_ip=$ip
 fi
+
+dbus set aliddns_last_time=$now

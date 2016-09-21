@@ -32,6 +32,12 @@
                 <div class="formfonttitle" style="padding-top: 12px">Aliddns - 设置</div>
                 <table class="FormTable">
                     <tr>
+                        <th>上次运行</th>
+                        <td>
+                            <% dbus_get_def("aliddns_last_time", "--"); %> (<% dbus_get_def("aliddns_last_act", "--"); %>)
+                        </td>
+                    </tr>
+                    <tr>
                         <th>app key</th>
                         <td>
                             <input type="text" id="aliddns_ak" value="<% dbus_get_def("aliddns_ak", ""); %>" class="input_ss_table">
