@@ -49,9 +49,13 @@
                         <td><input type="password" id="aliddns_sk" value="<% dbus_get_def("aliddns_sk", ""); %>" class="input_ss_table"></td>
                     </tr>
                     <tr>
+                        <th>检查周期</th>
+                        <td><input type="text" style="width: 2.5em" id="aliddns_interval" value="<% dbus_get_def("aliddns_interval", "120"); %>" class="input_ss_table">s</td>
+                    </tr>
+                    <tr>
                         <th>域名</th>
                         <td>
-                            <input type="text" id="aliddns_name" placeholder="子域名" value="<% dbus_get_def("aliddns_name", "home"); %>" class="input_ss_table"
+                            <input type="text" style="width: 4em" id="aliddns_name" placeholder="子域名" value="<% dbus_get_def("aliddns_name", "home"); %>" class="input_ss_table"
                             >.<input type="text"  id="aliddns_domain" placeholder="主域名" value="<% dbus_get_def("aliddns_domain", "example.com"); %>" class="input_ss_table">
                         </td>
                     </tr>
@@ -86,6 +90,10 @@ $(function () {
                 aliddns_sk: $('#aliddns_sk').val(),
                 aliddns_name: $('#aliddns_name').val(),
                 aliddns_domain: $('#aliddns_domain').val(),
+                aliddns_interval: $('#aliddns_interval').val(),
+                action_mode: ' Refresh ',
+                current_page: 'Module_aliddns.asp',
+                next_page: 'Module_aliddns.asp',
                 SystemCmd: 'aliddns_config.sh'
             })
         }).then(function () {
