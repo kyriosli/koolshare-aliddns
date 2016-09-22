@@ -52,11 +52,11 @@ query_recordid() {
 }
 
 update_record() {
-    send_request "UpdateDomainRecord" "RR=$name&RecordId=$1&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
+    send_request "UpdateDomainRecord" "RR=$aliddns_name&RecordId=$1&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
 }
 
 add_record() {
-    send_request "AddDomainRecord&DomainName=$domain" "RR=$name&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
+    send_request "AddDomainRecord&DomainName=$aliddns_domain" "RR=$aliddns_name&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
 }
 
 if [[ "$aliddns_record_id" = "" ]]
@@ -76,11 +76,11 @@ fi
 if [ "$aliddns_record_id" = "" ]; then
     # failed
     dbus ram aliddns_saved_ip=""
-    dbus set aliddns_last_act=failed
+    dbus ram aliddns_last_act=failed
 else
     dbus ram aliddns_record_id=$aliddns_record_id
-    dbus set aliddns_last_act="success: $ip"
+    dbus ram aliddns_last_act="success: $ip"
     dbus ram aliddns_saved_ip=$ip
 fi
 
-dbus set aliddns_last_time=$now
+dbus ram aliddns_last_time=$now
