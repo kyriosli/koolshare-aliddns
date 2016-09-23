@@ -3,17 +3,19 @@
 eval `dbus export aliddns_`
 
 if [ "$aliddns_enable" != "1" ]; then
+    echo "not enable"
     exit
 fi
 
 now=`date`
 
 ip=`curl http://whatismyip.akamai.com/ 2>/dev/null`
-if [ "$ip" = "$aliddns_saved_ip" ]
+current_ip=`nslookup $aliddns_name.$aliddns_domain | grep "Address 1"|tail -n1|cut -d' ' -f3`
+
+if [ "$ip" = "$current_ip" ]
 then
     echo "skipping"
-    dbus set aliddns_last_time=$now
-    dbus set aliddns_last_act=skipped
+    dbus set aliddns_last_act="$now: skipped($ip)"
     exit 0
 fi
 
@@ -59,28 +61,24 @@ add_record() {
     send_request "AddDomainRecord&DomainName=$aliddns_domain" "RR=$aliddns_name&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
 }
 
-if [[ "$aliddns_record_id" = "" ]]
+if [ "$aliddns_record_id" = "" ]
 then
     aliddns_record_id=`query_recordid | get_recordid`
-    if [[ "$aliddns_record_id" = "" ]]
-    then
-        echo 'adding record'
-        aliddns_record_id=`add_record | get_recordid`
-    else
-        echo 'updating record'
-        update_record $aliddns_record_id
-    fi
+fi
+if [ "$aliddns_record_id" = "" ]
+then
+    aliddns_record_id=`add_record | get_recordid`
+    echo "added record $aliddns_record_id"
+else
+    update_record $aliddns_record_id
+    echo "updated record $aliddns_record_id"
 fi
 
 # save to file
 if [ "$aliddns_record_id" = "" ]; then
     # failed
-    dbus ram aliddns_saved_ip=""
-    dbus ram aliddns_last_act=failed
+    dbus ram aliddns_last_act="$now: failed"
 else
     dbus ram aliddns_record_id=$aliddns_record_id
-    dbus ram aliddns_last_act="success: $ip"
-    dbus ram aliddns_saved_ip=$ip
+    dbus ram aliddns_last_act="$now: success($ip)"
 fi
-
-dbus ram aliddns_last_time=$now

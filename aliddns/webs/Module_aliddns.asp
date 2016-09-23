@@ -34,7 +34,7 @@
                     <tr>
                         <th>上次运行</th>
                         <td>
-                            <% dbus_get_def("aliddns_last_time", "--"); %> (<% dbus_get_def("aliddns_last_act", "--"); %>)
+                            <% dbus_get_def("aliddns_last_act", "--"); %>
                         </td>
                     </tr>
                     <tr>
