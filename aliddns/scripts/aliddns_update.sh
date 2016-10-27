@@ -9,15 +9,30 @@ fi
 
 now=`date`
 
-ip=`curl http://whatismyip.akamai.com/ 2>/dev/null`
-current_ip=`nslookup $aliddns_name.$aliddns_domain | grep "Address 1"|tail -n1|cut -d' ' -f3`
+die () {
+    echo $1
+    dbus ram aliddns_last_act="$now: failed($1)"
+}
 
-if [ "$ip" = "$current_ip" ]
+[ "$aliddns_curl" = "" ] && aliddns_curl="curl -s whatismyip.akamai.com"
+[ "$aliddns_dns" = "" ] && aliddns_dns="223.5.5.5"
+
+ip=`$aliddns_curl 2>&1` || die "$ip"
+
+current_ip=`nslookup $aliddns_name.$aliddns_domain $aliddns_dns 2>&1`
+
+if [ "$?" -eq "0" ]
 then
-    echo "skipping"
-    dbus set aliddns_last_act="$now: skipped($ip)"
-    exit 0
+    current_ip=`echo "$current_ip" | grep 'Address 1' | tail -n1 | awk '{print $NF}'`
+
+    if [ "$ip" = "$current_ip" ]
+    then
+        echo "skipping"
+        dbus set aliddns_last_act="$now: skipped($ip)"
+        exit 0
+    fi 
 fi
+
 
 timestamp=`date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ"`
 
