@@ -16,6 +16,7 @@ die () {
 
 [ "$aliddns_curl" = "" ] && aliddns_curl="curl -s whatismyip.akamai.com"
 [ "$aliddns_dns" = "" ] && aliddns_dns="223.5.5.5"
+[ "$aliddns_ttl" = "" ] && aliddns_ttl="600"
 
 ip=`$aliddns_curl 2>&1` || die "$ip"
 
@@ -38,26 +39,25 @@ timestamp=`date -u "+%Y-%m-%dT%H%%3A%M%%3A%SZ"`
 
 urlencode() {
     # urlencode <string>
-
-    local length="${#1}"
-    i=0
     out=""
-    for i in $(awk "BEGIN { for ( i=0; i<$length; i++ ) { print i; } }")
+    while read -n1 c
     do
-        local c="${1:$i:1}"
         case $c in
             [a-zA-Z0-9._-]) out="$out$c" ;;
             *) out="$out`printf '%%%02X' "'$c"`" ;;
         esac
-        i=$(($i + 1))
     done
     echo -n $out
 }
 
+enc() {
+    echo -n "$1" | urlencode
+}
+
 send_request() {
     local args="AccessKeyId=$aliddns_ak&Action=$1&Format=json&$2&Version=2015-01-09"
-    local hash=$(urlencode $(echo -n "GET&%2F&$(urlencode $args)" | openssl dgst -sha1 -hmac "$aliddns_sk&" -binary | openssl base64))
-    curl "http://alidns.aliyuncs.com/?$args&Signature=$hash" 2> /dev/null
+    local hash=$(echo -n "GET&%2F&$(enc "$args")" | openssl dgst -sha1 -hmac "$aliddns_sk&" -binary | openssl base64)
+    curl -s "http://alidns.aliyuncs.com/?$args&Signature=$(enc "$hash")"
 }
 
 get_recordid() {
@@ -69,11 +69,11 @@ query_recordid() {
 }
 
 update_record() {
-    send_request "UpdateDomainRecord" "RR=$aliddns_name&RecordId=$1&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
+    send_request "UpdateDomainRecord" "RR=$aliddns_name&RecordId=$1&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&TTL=$aliddns_ttl&Timestamp=$timestamp&Type=A&Value=$ip"
 }
 
 add_record() {
-    send_request "AddDomainRecord&DomainName=$aliddns_domain" "RR=$aliddns_name&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&Timestamp=$timestamp&Type=A&Value=$ip"
+    send_request "AddDomainRecord&DomainName=$aliddns_domain" "RR=$aliddns_name&SignatureMethod=HMAC-SHA1&SignatureNonce=$timestamp&SignatureVersion=1.0&TTL=$aliddns_ttl&Timestamp=$timestamp&Type=A&Value=$ip"
 }
 
 if [ "$aliddns_record_id" = "" ]

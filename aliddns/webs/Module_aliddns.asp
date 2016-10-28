@@ -101,6 +101,10 @@
                 						        <th title="可自行修改命令行，以获得正确的公网IP。如添加 '--interface vlan2' 以指定多播情况下的端口支持">获得IP命令(?)</th>
                 						        <td><textarea id="aliddns_curl" class="input_ss_table" style="width: 94%; height: 2.4em"><% dbus_get_def("aliddns_curl", "curl -s whatismyip.akamai.com"); %></textarea></td>
                 						    </tr>
+                						    <tr id="ttl_tr">
+                						        <th title="设置解析TTL，默认10分钟，免费版的范围是600-86400">TTL(?)</th>
+                						        <td><input id="aliddns_ttl" style="width: 4.5em" class="input_ss_table" value="<% dbus_get_def("aliddns_ttl", "600"); %>">s (1~86400)</td>
+                						    </tr>
                 						</table>
                 						<div class="apply_gen">
                 						    <input class="button_gen" type="button" value="提交">
@@ -131,7 +135,7 @@ $(function () {
     buildswitch();
     update_visibility();
     var posting = false;
-	var inputs = ['ak', 'sk', 'name', 'domain', 'interval', 'dns', 'curl'];
+	var inputs = ['ak', 'sk', 'name', 'domain', 'interval', 'dns', 'curl', 'ttl'];
     $('.button_gen').click(function () {
         if(posting) return;
         posting = true; // save
